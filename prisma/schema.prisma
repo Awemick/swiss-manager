@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tournament {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        TournamentType @default(SWISS)
+  status      TournamentStatus @default(SCHEDULED)
+  rounds      Int      @default(5)
+  currentRound Int     @default(0)
+  timeControl String?  // e.g., "90+30"
+  startDate   DateTime?
+  endDate     DateTime?
+  location    String?
+  director    String?
+  
+  // Settings
+  pointsWin   Float    @default(1.0)
+  pointsDraw  Float    @default(0.5)
+  pointsLoss  Float    @default(0.0)
+  tiebreak1   TiebreakType @default(BUCHHOLZ)
+  tiebreak2   TiebreakType @default(SONNEBORN_BERGER)
+  allowHalfPoints Boolean @default(true)
+  autoPairing Boolean @default(true)
+  
+  // Relations
+  players     Player[]
+  roundsData  Round[]
+  matches     Match[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tournaments")
+}
+
+model Player {
+  id            String   @id @default(cuid())
+  tournamentId  String
+  firstName     String
+  lastName      String
+  email         String?
+  rating        Int?     // FIDE, USCF, or local rating
+  ratingType    RatingType? @default(FIDE)
+  title         PlayerTitle? // GM, IM, FM, etc.
+  federation    String?  // 3-letter country code
+  isActive      Boolean  @default(true)
+  
+  // Tournament performance
+  initialRating Int?
+  currentRating Int?
+  score         Float    @default(0.0)
+  tiebreak1     Float    @default(0.0)
+  tiebreak2     Float    @default(0.0)
+  performanceRating Int? @default(0)
+  
+  // Relations
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  whiteMatches  Match[]    @relation("WhitePlayer")
+  blackMatches  Match[]    @relation("BlackPlayer")
+  byes          Bye[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId, email])
+  @@map("players")
+}
+
+model Round {
+  id            String   @id @default(cuid())
+  tournamentId  String
+  number        Int      // Round number (1, 2, 3...)
+  isCompleted   Boolean  @default(false)
+  startTime     DateTime?
+  endTime       DateTime?
+  
+  // Relations
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  matches       Match[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId, number])
+  @@map("rounds")
+}
+
+model Match {
+  id          String   @id @default(cuid())
+  tournamentId String
+  roundId     String
+  boardNumber Int
+  whitePlayerId String
+  blackPlayerId String
+  result      MatchResult?
+  
+  // Game details
+  whiteRating Int?
+  blackRating Int?
+  moves       String?  // PGN format
+  gameTime    Int?     // Total game time in seconds
+  startTime   DateTime?
+  endTime     DateTime?
+  
+  // Relations
+  tournament  Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  round       Round      @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  whitePlayer Player     @relation("WhitePlayer", fields: [whitePlayerId], references: [id])
+  blackPlayer Player     @relation("BlackPlayer", fields: [blackPlayerId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId, roundId, boardNumber])
+  @@map("matches")
+}
+
+model Bye {
+  id          String   @id @default(cuid())
+  tournamentId String
+  playerId    String
+  roundNumber Int
+  isRequested Boolean @default(false)
+  isApproved  Boolean @default(false)
+  
+  // Relations
+  tournament  Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player      Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@unique([tournamentId, playerId, roundNumber])
+  @@map("byes")
+}
+
+// Enums
+enum TournamentType {
+  SWISS
+  ROUND_ROBIN
+  KNOCKOUT
+  TEAM
+}
+
+enum TournamentStatus {
+  SCHEDULED
+  REGISTRATION
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum TiebreakType {
+  BUCHHOLZ
+  SONNEBORN_BERGER
+  MEDIAN_BUCHHOLZ
+  CUMULATIVE
+  PROGRESSIVE
+  KASPAROV
+  AVERAGE_RATING
+}
+
+enum RatingType {
+  FIDE
+  USCF
+  ECF
+  CFC
+  DWZ
+  OTHER
+}
+
+enum PlayerTitle {
+  GM
+  IM
+  FM
+  CM
+  WGM
+  WIM
+  WFM
+  WCM
+  NM
+  CM
+}
+
+enum MatchResult {
+  WHITE_WIN
+  BLACK_WIN
+  DRAW
+  WHITE_BYE
+  BLACK_BYE
+  DOUBLE_FORFEIT
+}
