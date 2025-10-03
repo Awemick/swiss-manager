@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select } from '@/components/ui/select'
 
 const steps = [
   { id: 'basic', title: 'Basic Info' },
@@ -104,17 +104,17 @@ export function CreateTournamentWizard() {
             </div>
             <div>
               <Label htmlFor="type">Tournament Type</Label>
-              <Select value={formData.type} onValueChange={(value) => updateFormData('type', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="SWISS">Swiss System</SelectItem>
-                  <SelectItem value="ROUND_ROBIN">Round Robin</SelectItem>
-                  <SelectItem value="KNOCKOUT">Knockout</SelectItem>
-                  <SelectItem value="TEAM">Team Tournament</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                id="type"
+                value={formData.type}
+                onChange={(e) => updateFormData('type', e.target.value)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="SWISS">Swiss System</option>
+                <option value="ROUND_ROBIN">Round Robin</option>
+                <option value="KNOCKOUT">Knockout</option>
+                <option value="TEAM">Team Tournament</option>
+              </select>
             </div>
             <div>
               <Label htmlFor="rounds">Number of Rounds</Label>
@@ -174,37 +174,37 @@ export function CreateTournamentWizard() {
             </div>
             <div>
               <Label htmlFor="tiebreak1">Primary Tiebreak</Label>
-              <Select value={formData.tiebreak1} onValueChange={(value) => updateFormData('tiebreak1', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BUCHHOLZ">Buchholz</SelectItem>
-                  <SelectItem value="SONNEBORN_BERGER">Sonneborn-Berger</SelectItem>
-                  <SelectItem value="MEDIAN_BUCHHOLZ">Median Buchholz</SelectItem>
-                  <SelectItem value="CUMULATIVE">Cumulative</SelectItem>
-                  <SelectItem value="PROGRESSIVE">Progressive</SelectItem>
-                  <SelectItem value="KASPAROV">Kasparov</SelectItem>
-                  <SelectItem value="AVERAGE_RATING">Average Rating</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                id="tiebreak1"
+                value={formData.tiebreak1}
+                onChange={(e) => updateFormData('tiebreak1', e.target.value)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="BUCHHOLZ">Buchholz</option>
+                <option value="SONNEBORN_BERGER">Sonneborn-Berger</option>
+                <option value="MEDIAN_BUCHHOLZ">Median Buchholz</option>
+                <option value="CUMULATIVE">Cumulative</option>
+                <option value="PROGRESSIVE">Progressive</option>
+                <option value="KASPAROV">Kasparov</option>
+                <option value="AVERAGE_RATING">Average Rating</option>
+              </select>
             </div>
             <div>
               <Label htmlFor="tiebreak2">Secondary Tiebreak</Label>
-              <Select value={formData.tiebreak2} onValueChange={(value) => updateFormData('tiebreak2', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BUCHHOLZ">Buchholz</SelectItem>
-                  <SelectItem value="SONNEBORN_BERGER">Sonneborn-Berger</SelectItem>
-                  <SelectItem value="MEDIAN_BUCHHOLZ">Median Buchholz</SelectItem>
-                  <SelectItem value="CUMULATIVE">Cumulative</SelectItem>
-                  <SelectItem value="PROGRESSIVE">Progressive</SelectItem>
-                  <SelectItem value="KASPAROV">Kasparov</SelectItem>
-                  <SelectItem value="AVERAGE_RATING">Average Rating</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                id="tiebreak2"
+                value={formData.tiebreak2}
+                onChange={(e) => updateFormData('tiebreak2', e.target.value)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="BUCHHOLZ">Buchholz</option>
+                <option value="SONNEBORN_BERGER">Sonneborn-Berger</option>
+                <option value="MEDIAN_BUCHHOLZ">Median Buchholz</option>
+                <option value="CUMULATIVE">Cumulative</option>
+                <option value="PROGRESSIVE">Progressive</option>
+                <option value="KASPAROV">Kasparov</option>
+                <option value="AVERAGE_RATING">Average Rating</option>
+              </select>
             </div>
             <div className="flex items-center space-x-2">
               <input
