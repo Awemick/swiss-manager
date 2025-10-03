@@ -242,7 +242,7 @@ export default function NewTournamentPage() {
                 <Switch
                   id="allowHalfPoints"
                   checked={formData.allowHalfPoints}
-                  onCheckedChange={(checked) => updateFormData('allowHalfPoints', checked)}
+                  onChange={(e) => updateFormData('allowHalfPoints', e.target.checked)}
                 />
               </div>
 
@@ -254,7 +254,7 @@ export default function NewTournamentPage() {
                 <Switch
                   id="autoPairing"
                   checked={formData.autoPairing}
-                  onCheckedChange={(checked) => updateFormData('autoPairing', checked)}
+                  onChange={(e) => updateFormData('autoPairing', e.target.checked)}
                 />
               </div>
             </div>
