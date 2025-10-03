@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select } from '@/components/ui/select'
 import { 
   Play, 
   SkipForward, 
@@ -126,18 +126,17 @@ export function RoundManager({ rounds, currentRound, tournamentId, onRoundChange
             </div>
             
             <div className="flex items-center space-x-2">
-              <Select value={selectedRound.toString()} onValueChange={(value) => setSelectedRound(parseInt(value))}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {rounds.map(round => (
-                    <SelectItem key={round.id} value={round.number.toString()}>
-                      Round {round.number}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                value={selectedRound.toString()}
+                onChange={(e) => setSelectedRound(parseInt(e.target.value))}
+                className="flex h-10 w-32 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {rounds.map(round => (
+                  <option key={round.id} value={round.number.toString()}>
+                    Round {round.number}
+                  </option>
+                ))}
+              </select>
               
               {canGenerateNextRound && (
                 <Button onClick={handleGeneratePairings} disabled={isGenerating}>
@@ -202,18 +201,17 @@ export function RoundManager({ rounds, currentRound, tournamentId, onRoundChange
                           {match.result}
                         </Badge>
                       ) : (
-                        <Select onValueChange={(value) => handleSubmitResult(match.id, value)}>
-                          <SelectTrigger className="w-24">
-                            <SelectValue placeholder="Result" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {getResultOptions().map(option => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <select
+                          onChange={(e) => handleSubmitResult(match.id, e.target.value)}
+                          className="flex h-10 w-24 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Result</option>
+                          {getResultOptions().map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       )}
                     </div>
                   </TableCell>
