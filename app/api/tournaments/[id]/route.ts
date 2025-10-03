@@ -11,12 +11,7 @@ export async function GET(
 
     const { data: tournament, error } = await supabase
       .from('tournaments')
-      .select(`
-        *,
-        players:players(count),
-        matches:matches(count),
-        players_list:players(*)
-      `)
+      .select('*')
       .eq('id', params.id)
       .single()
 
@@ -24,19 +19,23 @@ export async function GET(
       return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
-    // Get matches separately
-    const { data: matches } = await supabase
+    // Get player count
+    const { count: playerCount } = await supabase
+      .from('players')
+      .select('*', { count: 'exact', head: true })
+      .eq('tournament_id', params.id)
+
+    // Get match count
+    const { count: matchCount } = await supabase
       .from('matches')
-      .select('*')
+      .select('*', { count: 'exact', head: true })
       .eq('tournament_id', params.id)
 
     return NextResponse.json({
       ...tournament,
-      players: tournament.players_list,
-      matches: matches || [],
       _count: {
-        players: tournament.players || 0,
-        matches: tournament.matches || 0,
+        players: playerCount || 0,
+        matches: matchCount || 0,
       }
     })
   } catch (error) {
