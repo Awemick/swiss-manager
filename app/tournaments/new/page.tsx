@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { ArrowLeft, ArrowRight, Save, Settings, Users, Calendar, Trophy } from 'lucide-react'
 
@@ -117,17 +117,17 @@ export default function NewTournamentPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="type">Tournament System *</Label>
-                <Select value={formData.type} onValueChange={(value: any) => updateFormData('type', value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SWISS">Swiss System</SelectItem>
-                    <SelectItem value="ROUND_ROBIN">Round Robin</SelectItem>
-                    <SelectItem value="KNOCKOUT">Knockout</SelectItem>
-                    <SelectItem value="TEAM">Team Tournament</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  id="type"
+                  value={formData.type}
+                  onChange={(e) => updateFormData('type', e.target.value)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+                >
+                  <option value="SWISS">Swiss System</option>
+                  <option value="ROUND_ROBIN">Round Robin</option>
+                  <option value="KNOCKOUT">Knockout</option>
+                  <option value="TEAM">Team Tournament</option>
+                </select>
               </div>
 
               <div>
@@ -202,34 +202,34 @@ export default function NewTournamentPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="tiebreak1">Primary Tiebreak</Label>
-                <Select value={formData.tiebreak1} onValueChange={(value: any) => updateFormData('tiebreak1', value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="BUCHHOLZ">Buchholz</SelectItem>
-                    <SelectItem value="SONNEBORN_BERGER">Sonneborn-Berger</SelectItem>
-                    <SelectItem value="MEDIAN_BUCHHOLZ">Median Buchholz</SelectItem>
-                    <SelectItem value="CUMULATIVE">Cumulative</SelectItem>
-                    <SelectItem value="PROGRESSIVE">Progressive</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  id="tiebreak1"
+                  value={formData.tiebreak1}
+                  onChange={(e) => updateFormData('tiebreak1', e.target.value)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+                >
+                  <option value="BUCHHOLZ">Buchholz</option>
+                  <option value="SONNEBORN_BERGER">Sonneborn-Berger</option>
+                  <option value="MEDIAN_BUCHHOLZ">Median Buchholz</option>
+                  <option value="CUMULATIVE">Cumulative</option>
+                  <option value="PROGRESSIVE">Progressive</option>
+                </select>
               </div>
 
               <div>
                 <Label htmlFor="tiebreak2">Secondary Tiebreak</Label>
-                <Select value={formData.tiebreak2} onValueChange={(value: any) => updateFormData('tiebreak2', value)}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SONNEBORN_BERGER">Sonneborn-Berger</SelectItem>
-                    <SelectItem value="BUCHHOLZ">Buchholz</SelectItem>
-                    <SelectItem value="MEDIAN_BUCHHOLZ">Median Buchholz</SelectItem>
-                    <SelectItem value="CUMULATIVE">Cumulative</SelectItem>
-                    <SelectItem value="PROGRESSIVE">Progressive</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  id="tiebreak2"
+                  value={formData.tiebreak2}
+                  onChange={(e) => updateFormData('tiebreak2', e.target.value)}
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+                >
+                  <option value="SONNEBORN_BERGER">Sonneborn-Berger</option>
+                  <option value="BUCHHOLZ">Buchholz</option>
+                  <option value="MEDIAN_BUCHHOLZ">Median Buchholz</option>
+                  <option value="CUMULATIVE">Cumulative</option>
+                  <option value="PROGRESSIVE">Progressive</option>
+                </select>
               </div>
             </div>
 
@@ -261,17 +261,17 @@ export default function NewTournamentPage() {
 
             <div>
               <Label htmlFor="ratingType">Rating System</Label>
-              <Select value={formData.ratingType} onValueChange={(value: any) => updateFormData('ratingType', value)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FIDE">FIDE</SelectItem>
-                  <SelectItem value="USCF">USCF</SelectItem>
-                  <SelectItem value="ECF">ECF</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
-                </SelectContent>
-              </Select>
+              <select
+                id="ratingType"
+                value={formData.ratingType}
+                onChange={(e) => updateFormData('ratingType', e.target.value)}
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+              >
+                <option value="FIDE">FIDE</option>
+                <option value="USCF">USCF</option>
+                <option value="ECF">ECF</option>
+                <option value="OTHER">Other</option>
+              </select>
             </div>
           </div>
         )

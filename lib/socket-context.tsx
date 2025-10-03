@@ -26,26 +26,27 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {
-    const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
-      path: '/api/socket',
-      addTrailingSlash: false,
-    })
+    // Disable socket connection for now
+    // const socketInstance = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
+    //   path: '/api/socket',
+    //   addTrailingSlash: false,
+    // })
 
-    socketInstance.on('connect', () => {
-      setIsConnected(true)
-      console.log('Connected to server')
-    })
+    // socketInstance.on('connect', () => {
+    //   setIsConnected(true)
+    //   console.log('Connected to server')
+    // })
 
-    socketInstance.on('disconnect', () => {
-      setIsConnected(false)
-      console.log('Disconnected from server')
-    })
+    // socketInstance.on('disconnect', () => {
+    //   setIsConnected(false)
+    //   console.log('Disconnected from server')
+    // })
 
-    setSocket(socketInstance)
+    // setSocket(socketInstance)
 
-    return () => {
-      socketInstance.disconnect()
-    }
+    // return () => {
+    //   socketInstance.disconnect()
+    // }
   }, [])
 
   return (

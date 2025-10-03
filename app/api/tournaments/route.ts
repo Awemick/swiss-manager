@@ -1,34 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { SwissPairing } from '@/lib/pairing/swiss'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    
-    const tournament = await prisma.tournament.create({
-      data: {
-        name: body.name,
-        description: body.description,
-        type: body.type,
-        rounds: body.rounds,
-        timeControl: body.timeControl,
-        startDate: body.startDate ? new Date(body.startDate) : null,
-        endDate: body.endDate ? new Date(body.endDate) : null,
-        location: body.location,
-        director: body.director,
-        pointsWin: body.pointsWin,
-        pointsDraw: body.pointsDraw,
-        pointsLoss: body.pointsLoss,
-        tiebreak1: body.tiebreak1,
-        tiebreak2: body.tiebreak2,
-        allowHalfPoints: body.allowHalfPoints,
-        autoPairing: body.autoPairing,
-        status: 'REGISTRATION',
-      },
-    })
+    const supabase = createServerComponentClient({ cookies: () => cookies() })
+    const { data: { user } } = await supabase.auth.getUser()
 
-    return NextResponse.json(tournament)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+
+    const { data, error } = await supabase.from('tournaments').insert({
+      name: body.name,
+      description: body.description,
+      type: body.type || 'SWISS',
+      rounds: body.rounds || 5,
+      time_control: body.timeControl,
+      start_date: body.startDate,
+      end_date: body.endDate,
+      location: body.location,
+      director: body.director,
+      points_win: body.pointsWin || 1.0,
+      points_draw: body.pointsDraw || 0.5,
+      points_loss: body.pointsLoss || 0.0,
+      tiebreak1: body.tiebreak1 || 'BUCHHOLZ',
+      tiebreak2: body.tiebreak2 || 'SONNEBORN_BERGER',
+      allow_half_points: body.allowHalfPoints ?? true,
+      auto_pairing: body.autoPairing ?? true,
+      status: 'SCHEDULED',
+      organizer_id: user.id,
+    }).select().single()
+
+    if (error) {
+      console.error('Failed to create tournament:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(data)
   } catch (error) {
     console.error('Failed to create tournament:', error)
     return NextResponse.json(
@@ -40,35 +51,30 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createServerComponentClient({ cookies: () => cookies() })
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '10')
     const page = parseInt(searchParams.get('page') || '1')
 
-    const tournaments = await prisma.tournament.findMany({
-      include: {
-        _count: {
-          select: {
-            players: true,
-            matches: true,
-          },
-        },
-        players: {
-          take: 5,
-          orderBy: { score: 'desc' },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: (page - 1) * limit,
-    })
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
-    const totalCount = await prisma.tournament.count()
+    const { data: tournaments, error, count } = await supabase
+      .from('tournaments')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to)
+
+    if (error) {
+      console.error('Failed to fetch tournaments:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
     return NextResponse.json({
       tournaments,
-      totalCount,
+      totalCount: count,
       page,
-      totalPages: Math.ceil(totalCount / limit),
+      totalPages: Math.ceil((count || 0) / limit),
     })
   } catch (error) {
     console.error('Failed to fetch tournaments:', error)
