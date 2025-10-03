@@ -1,22 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const rounds = await prisma.round.findMany({
-      where: { tournamentId: params.id },
-      include: {
-        _count: {
-          select: {
-            matches: true,
-          },
-        },
-      },
-      orderBy: { number: 'asc' },
-    })
+    const supabase = createServerSupabaseClient()
+
+    const { data: rounds, error } = await supabase
+      .from('rounds')
+      .select(`
+        *,
+        matches:matches(count)
+      `)
+      .eq('tournament_id', params.id)
+      .order('number', { ascending: true })
+
+    if (error) {
+      console.error('Failed to fetch rounds:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
     return NextResponse.json(rounds)
   } catch (error) {
@@ -33,45 +37,55 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Get tournament info
-    const tournament = await prisma.tournament.findUnique({
-      where: { id: params.id },
-      include: { players: { orderBy: { score: 'desc' } } }
-    })
+    const supabase = createServerSupabaseClient()
 
-    if (!tournament) {
-      return NextResponse.json(
-        { error: 'Tournament not found' },
-        { status: 404 }
-      )
+    // Get tournament info
+    const { data: tournament, error: tournamentError } = await supabase
+      .from('tournaments')
+      .select(`
+        *,
+        players (*)
+      `)
+      .eq('id', params.id)
+      .single()
+
+    if (tournamentError || !tournament) {
+      return NextResponse.json({ error: 'Tournament not found' }, { status: 404 })
     }
 
     if (tournament.status !== 'ONGOING') {
-      return NextResponse.json(
-        { error: 'Tournament must be ongoing to start rounds' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Tournament must be ongoing to start rounds' }, { status: 400 })
     }
 
     // Calculate next round number
-    const lastRound = await prisma.round.findFirst({
-      where: { tournamentId: params.id },
-      orderBy: { number: 'desc' }
-    })
+    const { data: lastRound } = await supabase
+      .from('rounds')
+      .select('number')
+      .eq('tournament_id', params.id)
+      .order('number', { ascending: false })
+      .limit(1)
+      .single()
 
     const nextRoundNumber = (lastRound?.number || 0) + 1
 
     // Create new round
-    const round = await prisma.round.create({
-      data: {
-        tournamentId: params.id,
+    const { data: round, error: roundError } = await supabase
+      .from('rounds')
+      .insert({
+        tournament_id: params.id,
         number: nextRoundNumber,
-        startTime: new Date(),
-      },
-    })
+        start_time: new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+    if (roundError) {
+      console.error('Failed to create round:', roundError)
+      return NextResponse.json({ error: 'Failed to create round' }, { status: 500 })
+    }
 
     // Generate pairings using Swiss system
-    await generatePairings(tournament.id, nextRoundNumber, tournament.players)
+    await generatePairings(supabase, params.id, nextRoundNumber, tournament.players, round.id)
 
     return NextResponse.json(round)
   } catch (error) {
@@ -83,14 +97,14 @@ export async function POST(
   }
 }
 
-async function generatePairings(tournamentId: string, roundNumber: number, players: any[]) {
+async function generatePairings(supabase: any, tournamentId: string, roundNumber: number, players: any[], roundId: string) {
   // Simple pairing logic - in a real system, this would use proper Swiss pairing algorithm
-  const activePlayers = players.filter(p => p.isActive)
+  const activePlayers = players.filter((p: any) => p.is_active)
   const pairedPlayers = []
   const usedPlayers = new Set()
 
   // Sort by score descending
-  activePlayers.sort((a, b) => b.score - a.score)
+  activePlayers.sort((a: any, b: any) => b.score - a.score)
 
   for (let i = 0; i < activePlayers.length - 1; i += 2) {
     const player1 = activePlayers[i]
@@ -98,16 +112,12 @@ async function generatePairings(tournamentId: string, roundNumber: number, playe
 
     if (player1 && player2 && !usedPlayers.has(player1.id) && !usedPlayers.has(player2.id)) {
       // Create match
-      await prisma.match.create({
-        data: {
-          tournamentId,
-          roundId: (await prisma.round.findFirst({
-            where: { tournamentId, number: roundNumber }
-          }))!.id,
-          boardNumber: Math.floor(i / 2) + 1,
-          whitePlayerId: player1.id,
-          blackPlayerId: player2.id,
-        }
+      await supabase.from('matches').insert({
+        tournament_id: tournamentId,
+        round_id: roundId,
+        board_number: Math.floor(i / 2) + 1,
+        white_player_id: player1.id,
+        black_player_id: player2.id,
       })
 
       usedPlayers.add(player1.id)
@@ -117,24 +127,28 @@ async function generatePairings(tournamentId: string, roundNumber: number, playe
   }
 
   // Handle odd number of players - give bye
-  const unpairedPlayers = activePlayers.filter(p => !usedPlayers.has(p.id))
+  const unpairedPlayers = activePlayers.filter((p: any) => !usedPlayers.has(p.id))
   if (unpairedPlayers.length === 1) {
     const byePlayer = unpairedPlayers[0]
-    await prisma.bye.create({
-      data: {
-        tournamentId,
-        playerId: byePlayer.id,
-        roundNumber,
-        isApproved: true,
-      }
+    await supabase.from('byes').insert({
+      tournament_id: tournamentId,
+      player_id: byePlayer.id,
+      round_number: roundNumber,
+      is_approved: true,
     })
 
-    // Award bye points
-    await prisma.player.update({
-      where: { id: byePlayer.id },
-      data: {
-        score: { increment: 1 }, // Assuming 1 point for bye
-      }
-    })
+    // Award bye points - get current score and update
+    const { data: currentPlayer } = await supabase
+      .from('players')
+      .select('score')
+      .eq('id', byePlayer.id)
+      .single()
+
+    if (currentPlayer) {
+      await supabase
+        .from('players')
+        .update({ score: (currentPlayer.score || 0) + 1 })
+        .eq('id', byePlayer.id)
+    }
   }
 }
