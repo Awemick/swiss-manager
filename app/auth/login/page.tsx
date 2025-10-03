@@ -17,6 +17,10 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!supabase) {
+      alert('Supabase not configured')
+      return
+    }
     setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
@@ -28,6 +32,10 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = async () => {
+    if (!supabase) {
+      alert('Supabase not configured')
+      return
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/` }

@@ -29,7 +29,7 @@ export default function TournamentStandingsPage() {
   }, [params.id])
 
   useEffect(() => {
-    if (!params.id) return
+    if (!params.id || !supabase) return
 
     const channel = supabase
       .channel('players-updates')

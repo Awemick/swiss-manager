@@ -18,6 +18,10 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!supabase) {
+      alert('Supabase not configured')
+      return
+    }
     setLoading(true)
     const { error } = await supabase.auth.signUp({
       email,
@@ -36,6 +40,10 @@ export default function SignupPage() {
   }
 
   const handleGoogleSignup = async () => {
+    if (!supabase) {
+      alert('Supabase not configured')
+      return
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/` }

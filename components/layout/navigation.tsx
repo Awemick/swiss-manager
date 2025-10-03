@@ -27,7 +27,7 @@ export function Navigation() {
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm">{user.email}</span>
-                <Button onClick={() => supabase.auth.signOut()} variant="outline" size="sm">
+                <Button onClick={() => supabase?.auth.signOut()} variant="outline" size="sm">
                   Logout
                 </Button>
               </div>
