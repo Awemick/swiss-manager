@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
+  const [role, setRole] = useState('player')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -27,7 +28,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { full_name: fullName }
+        data: { full_name: fullName, role: role }
       }
     })
     if (error) {
@@ -89,6 +90,20 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+            </div>
+
+            <div>
+              <Label htmlFor="role">Role</Label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-3 py-2 border rounded"
+              >
+                <option value="player">Player</option>
+                <option value="organizer">Tournament Organizer</option>
+                <option value="spectator">Spectator</option>
+              </select>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Signing up...' : 'Sign Up'}
