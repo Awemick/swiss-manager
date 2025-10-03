@@ -1,27 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string; roundId: string } }
 ) {
   try {
+    const supabase = createServerSupabaseClient()
+
     // Mark round as completed
-    const round = await prisma.round.update({
-      where: { id: params.roundId },
-      data: {
-        isCompleted: true,
-        endTime: new Date(),
-      },
-      include: {
-        matches: {
-          include: {
-            whitePlayer: true,
-            blackPlayer: true,
-          }
-        }
-      }
-    })
+    const { data: round, error: roundError } = await supabase
+      .from('rounds')
+      .update({
+        is_completed: true,
+        end_time: new Date().toISOString(),
+      })
+      .eq('id', params.roundId)
+      .select(`
+        *,
+        matches (
+          *,
+          whitePlayer:players!white_player_id(*),
+          blackPlayer:players!black_player_id(*)
+        )
+      `)
+      .single()
+
+    if (roundError) {
+      console.error('Failed to update round:', roundError)
+      return NextResponse.json({ error: 'Failed to complete round' }, { status: 500 })
+    }
 
     // Update player scores based on match results
     for (const match of round.matches) {
@@ -44,21 +52,34 @@ export async function POST(
             break
         }
 
+        // Get current scores
+        const { data: whitePlayer } = await supabase
+          .from('players')
+          .select('score')
+          .eq('id', match.white_player_id)
+          .single()
+
+        const { data: blackPlayer } = await supabase
+          .from('players')
+          .select('score')
+          .eq('id', match.black_player_id)
+          .single()
+
         // Update white player score
-        await prisma.player.update({
-          where: { id: match.whitePlayerId },
-          data: {
-            score: { increment: whiteScore }
-          }
-        })
+        if (whitePlayer) {
+          await supabase
+            .from('players')
+            .update({ score: (whitePlayer.score || 0) + whiteScore })
+            .eq('id', match.white_player_id)
+        }
 
         // Update black player score
-        await prisma.player.update({
-          where: { id: match.blackPlayerId },
-          data: {
-            score: { increment: blackScore }
-          }
-        })
+        if (blackPlayer) {
+          await supabase
+            .from('players')
+            .update({ score: (blackPlayer.score || 0) + blackScore })
+            .eq('id', match.black_player_id)
+        }
       }
     }
 
