@@ -59,11 +59,25 @@ export async function GET(request: NextRequest) {
     const from = (page - 1) * limit
     const to = from + limit - 1
 
+    // Get tournaments with player counts
     const { data: tournaments, error, count } = await supabase
       .from('tournaments')
-      .select('*', { count: 'exact' })
+      .select(`
+        *,
+        players:players(count)
+      `, { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to)
+
+    // Add _count structure for compatibility
+    const tournamentsWithCounts = tournaments?.map(tournament => ({
+      ...tournament,
+      _count: {
+        players: tournament.players?.[0]?.count || 0,
+        matches: 0 // We'll add this later if needed
+      },
+      players: [] // Empty array for compatibility
+    })) || []
 
     if (error) {
       console.error('Failed to fetch tournaments:', error)
@@ -71,7 +85,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      tournaments,
+      tournaments: tournamentsWithCounts,
       totalCount: count,
       page,
       totalPages: Math.ceil((count || 0) / limit),
