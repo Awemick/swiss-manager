@@ -4,24 +4,34 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tournament, Player, Match } from '@prisma/client'
-import { 
-  Trophy, 
-  Users, 
-  Calendar, 
-  Plus, 
-  TrendingUp, 
+import {
+  Trophy,
+  Users,
+  Calendar,
+  Plus,
+  TrendingUp,
   Clock,
   ArrowRight
 } from 'lucide-react'
 import Link from 'next/link'
+
+type TournamentStatus = 'SCHEDULED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED'
+
+interface Tournament {
+  id: string
+  name: string
+  status: TournamentStatus
+  currentRound: number
+  rounds: number
+  location: string
+}
 
 interface TournamentWithCounts extends Tournament {
   _count: {
     players: number
     matches: number
   }
-  players: Player[]
+  players: any[]
 }
 
 export function Dashboard() {
@@ -46,8 +56,8 @@ export function Dashboard() {
       // Calculate stats
       setStats({
         totalTournaments: data.totalCount,
-        activeTournaments: data.tournaments.filter((t: Tournament) => 
-          t.status === 'ONGOING' || t.status === 'REGISTRATION'
+        activeTournaments: data.tournaments.filter((t: Tournament) =>
+          t.status === 'ONGOING' || t.status === 'SCHEDULED'
         ).length,
         totalPlayers: data.tournaments.reduce((sum: number, t: TournamentWithCounts) => 
           sum + t._count.players, 0
@@ -64,9 +74,9 @@ export function Dashboard() {
   const getStatusColor = (status: TournamentStatus) => {
     switch (status) {
       case 'ONGOING': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-      case 'REGISTRATION': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+      case 'SCHEDULED': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
       case 'COMPLETED': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
-      case 'SCHEDULED': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+      case 'CANCELLED': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
