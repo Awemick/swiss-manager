@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerComponentClient({ cookies: () => cookies() })
 
     const { data: tournament, error } = await supabase
       .from('tournaments')
@@ -52,7 +53,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerComponentClient({ cookies: () => cookies() })
     const body = await request.json()
 
     const { data, error } = await supabase
@@ -100,7 +101,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerComponentClient({ cookies: () => cookies() })
 
     const { error } = await supabase
       .from('tournaments')
