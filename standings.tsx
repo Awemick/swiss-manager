@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select } from '@/components/ui/select'
 import { Download, Filter, Trophy, TrendingUp, Target } from 'lucide-react'
 
 interface Standing {
@@ -104,18 +104,16 @@ export function Standings({ standings, tournamentId }: StandingsProps) {
             </CardDescription>
           </div>
           <div className="flex space-x-2">
-            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-40">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="score">Score</SelectItem>
-                <SelectItem value="buchholz">Buchholz</SelectItem>
-                <SelectItem value="sonnebornBerger">Sonneborn-Berger</SelectItem>
-                <SelectItem value="performance">Performance</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="flex h-10 w-40 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="score">Score</option>
+              <option value="buchholz">Buchholz</option>
+              <option value="sonnebornBerger">Sonneborn-Berger</option>
+              <option value="performance">Performance</option>
+            </select>
             <Button variant="outline" onClick={() => setShowTiebreaks(!showTiebreaks)}>
               {showTiebreaks ? 'Hide' : 'Show'} Tiebreaks
             </Button>
