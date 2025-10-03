@@ -1,1 +1,2 @@
-export { supabase, createServerSupabaseClient, supabaseAdmin } from './supabase'
+export { supabase } from './supabase'
+export { createServerSupabaseClient, supabaseAdmin } from './supabase-server'
