@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string; roundId: string } }
 ) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerComponentClient({ cookies: () => cookies() })
 
     // Mark round as completed
     const { data: round, error: roundError } = await supabase

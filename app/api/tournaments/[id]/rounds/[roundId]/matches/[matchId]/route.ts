@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string; roundId: string; matchId: string } }
 ) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerComponentClient({ cookies: () => cookies() })
     const body = await request.json()
 
     const { data, error } = await supabase
