@@ -10,6 +10,10 @@ export default function TournamentPlayersPage() {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [csvFile, setCsvFile] = useState(null)
+  const [importPreview, setImportPreview] = useState([])
+  const [importing, setImporting] = useState(false)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -89,6 +93,91 @@ export default function TournamentPlayersPage() {
     } catch (error) {
       console.error('Failed to fetch Lichess ratings:', error)
       alert('Failed to fetch ratings. Please try again.')
+    }
+  }
+
+  const parseCSV = (csvText) => {
+    const lines = csvText.trim().split('\n')
+    if (lines.length < 2) return []
+
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+    const players = []
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim())
+      if (values.length === headers.length) {
+        const player = {}
+        headers.forEach((header, index) => {
+          player[header] = values[index] || ''
+        })
+        players.push(player)
+      }
+    }
+
+    return players
+  }
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    if (!file.name.endsWith('.csv')) {
+      alert('Please select a CSV file')
+      return
+    }
+
+    setCsvFile(file)
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const csvText = e.target.result
+      const parsedPlayers = parseCSV(csvText)
+      setImportPreview(parsedPlayers)
+    }
+    reader.readAsText(file)
+  }
+
+  const importPlayers = async () => {
+    if (!importPreview.length) return
+
+    setImporting(true)
+    let successCount = 0
+    let errorCount = 0
+
+    for (const playerData of importPreview) {
+      try {
+        const response = await fetch(`/api/tournaments/${params.id}/players`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName: playerData.firstname || playerData.first_name || playerData.first || '',
+            lastName: playerData.lastname || playerData.last_name || playerData.last || '',
+            email: playerData.email || '',
+            rating: playerData.rating ? parseInt(playerData.rating) : null,
+            ratingType: playerData.ratingtype || playerData.rating_type || 'FIDE',
+            title: playerData.title || '',
+            federation: playerData.federation || '',
+            lichessUsername: playerData.lichessusername || playerData.lichess_username || playerData.lichess || ''
+          })
+        })
+
+        if (response.ok) {
+          successCount++
+        } else {
+          errorCount++
+        }
+      } catch (error) {
+        errorCount++
+      }
+    }
+
+    setImporting(false)
+    alert(`Import completed! ${successCount} players imported successfully, ${errorCount} failed.`)
+
+    if (successCount > 0) {
+      fetchPlayers()
+      setShowImportModal(false)
+      setCsvFile(null)
+      setImportPreview([])
     }
   }
 
@@ -186,7 +275,10 @@ export default function TournamentPlayersPage() {
           <p className="text-gray-600 mb-4">
             Import players from CSV or copy/paste from existing lists.
           </p>
-          <button className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
             Import Players
           </button>
         </div>
@@ -348,6 +440,113 @@ export default function TournamentPlayersPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* CSV Import Modal */}
+        {showImportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-4xl w-full max-h-96 overflow-y-auto mx-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Import Players from CSV</h3>
+                <button
+                  onClick={() => {
+                    setShowImportModal(false)
+                    setCsvFile(null)
+                    setImportPreview([])
+                  }}
+                  className="text-gray-500 hover:text-gray-700 text-xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              {!csvFile ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Select CSV File</label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileUpload}
+                      className="w-full px-3 py-2 border rounded"
+                    />
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-medium mb-2">CSV Format Requirements:</h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Your CSV should have a header row with these column names (case-insensitive):
+                    </p>
+                    <div className="text-sm font-mono bg-white p-2 rounded border">
+                      firstName,lastName,email,rating,ratingType,title,federation,lichessUsername
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">
+                      Only firstName and lastName are required. Other fields are optional.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">File: {csvFile.name}</span>
+                    <span className="text-sm text-gray-600">{importPreview.length} players found</span>
+                  </div>
+
+                  {importPreview.length > 0 && (
+                    <div className="border rounded max-h-60 overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left">First Name</th>
+                            <th className="px-3 py-2 text-left">Last Name</th>
+                            <th className="px-3 py-2 text-left">Email</th>
+                            <th className="px-3 py-2 text-left">Rating</th>
+                            <th className="px-3 py-2 text-left">Lichess</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {importPreview.slice(0, 5).map((player, index) => (
+                            <tr key={index} className="border-t">
+                              <td className="px-3 py-2">{player.firstname || player.first_name || player.first || ''}</td>
+                              <td className="px-3 py-2">{player.lastname || player.last_name || player.last || ''}</td>
+                              <td className="px-3 py-2">{player.email || ''}</td>
+                              <td className="px-3 py-2">{player.rating || ''}</td>
+                              <td className="px-3 py-2">{player.lichessusername || player.lichess_username || player.lichess || ''}</td>
+                            </tr>
+                          ))}
+                          {importPreview.length > 5 && (
+                            <tr>
+                              <td colSpan={5} className="px-3 py-2 text-center text-gray-500">
+                                ... and {importPreview.length - 5} more players
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={importPlayers}
+                      disabled={importing || !importPreview.length}
+                      className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 disabled:opacity-50"
+                    >
+                      {importing ? 'Importing...' : `Import ${importPreview.length} Players`}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCsvFile(null)
+                        setImportPreview([])
+                      }}
+                      className="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400"
+                    >
+                      Choose Different File
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
