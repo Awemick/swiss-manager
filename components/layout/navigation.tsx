@@ -24,6 +24,9 @@ export function Navigation() {
             <Link href="/tournaments" className="text-sm font-medium hover:underline">
               Tournaments
             </Link>
+            <Link href="/community" className="text-sm font-medium hover:underline">
+              Community
+            </Link>
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm">{user.email}</span>
