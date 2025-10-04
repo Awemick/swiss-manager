@@ -8,6 +8,7 @@ export default function RoundDetailsPage() {
   const params = useParams()
   const [round, setRound] = useState(null)
   const [matches, setMatches] = useState([])
+  const [byes, setByes] = useState([])
   const [loading, setLoading] = useState(true)
   const [pgnFiles, setPgnFiles] = useState({})
   const [viewingGame, setViewingGame] = useState(null)
@@ -24,7 +25,8 @@ export default function RoundDetailsPage() {
       if (response.ok) {
         const data = await response.json()
         setRound(data.round)
-        setMatches(data.matches)
+        setMatches(data.matches || [])
+        setByes(data.byes || [])
       }
     } catch (error) {
       console.error('Failed to fetch round details:', error)
@@ -249,6 +251,35 @@ export default function RoundDetailsPage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Byes */}
+        {byes.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-4">Byes</h3>
+            <div className="space-y-2">
+              {byes.map((bye) => (
+                <div key={bye.id} className="flex items-center justify-between p-4 border rounded-lg bg-yellow-50">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-sm font-bold text-white">
+                      B
+                    </div>
+                    <div>
+                      <p className="font-medium">
+                        {bye.player?.firstName} {bye.player?.lastName}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Bye - Receives 1 point
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {bye.isApproved ? 'Approved' : 'Requested'}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
