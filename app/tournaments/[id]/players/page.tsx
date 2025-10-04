@@ -19,9 +19,12 @@ export default function TournamentPlayersPage() {
     title: '',
     federation: '',
     lichessUsername: '',
+    bulletRating: '',
     blitzRating: '',
     rapidRating: '',
-    classicalRating: ''
+    classicalRating: '',
+    correspondenceRating: '',
+    selectedLichessRating: 'blitz' // Which Lichess rating to use as main rating
   })
 
   useEffect(() => {
@@ -65,15 +68,20 @@ export default function TournamentPlayersPage() {
     try {
       const response = await fetch(`/api/lichess/${formData.lichessUsername.trim()}`)
       if (response.ok) {
-        const ratings = await response.json()
+        const data = await response.json()
+        const selectedRating = data[formData.selectedLichessRating] || data.blitz || data.rapid || data.classical
+
         setFormData({
           ...formData,
-          blitzRating: ratings.blitz || '',
-          rapidRating: ratings.rapid || '',
-          classicalRating: ratings.classical || '',
-          rating: ratings.blitz ? ratings.blitz.toString() : formData.rating // set rating to blitz if available
+          bulletRating: data.bullet || '',
+          blitzRating: data.blitz || '',
+          rapidRating: data.rapid || '',
+          classicalRating: data.classical || '',
+          correspondenceRating: data.correspondence || '',
+          rating: selectedRating ? selectedRating.toString() : formData.rating,
+          title: data.title || formData.title
         })
-        alert('Ratings fetched successfully!')
+        alert(`Ratings fetched successfully! Using ${formData.selectedLichessRating} rating as primary.`)
       } else {
         const error = await response.json()
         alert(`Failed to fetch ratings: ${error.error}`)
@@ -93,9 +101,11 @@ export default function TournamentPlayersPage() {
         body: JSON.stringify({
           ...formData,
           rating: formData.rating ? parseInt(formData.rating) : null,
+          bulletRating: formData.bulletRating ? parseInt(formData.bulletRating) : null,
           blitzRating: formData.blitzRating ? parseInt(formData.blitzRating) : null,
           rapidRating: formData.rapidRating ? parseInt(formData.rapidRating) : null,
-          classicalRating: formData.classicalRating ? parseInt(formData.classicalRating) : null
+          classicalRating: formData.classicalRating ? parseInt(formData.classicalRating) : null,
+          correspondenceRating: formData.correspondenceRating ? parseInt(formData.correspondenceRating) : null
         })
       })
 
@@ -111,9 +121,12 @@ export default function TournamentPlayersPage() {
           title: '',
           federation: '',
           lichessUsername: '',
+          bulletRating: '',
           blitzRating: '',
           rapidRating: '',
-          classicalRating: ''
+          classicalRating: '',
+          correspondenceRating: '',
+          selectedLichessRating: 'blitz'
         })
         setShowAddForm(false)
         alert('Player added successfully!')
@@ -247,6 +260,38 @@ export default function TournamentPlayersPage() {
                 </button>
               </div>
             </div>
+
+            {/* Lichess Rating Selector */}
+            {formData.lichessUsername && (
+              <div>
+                <label className="block text-sm font-medium mb-1">Use Lichess Rating As Primary</label>
+                <select
+                  value={formData.selectedLichessRating}
+                  onChange={(e) => setFormData({...formData, selectedLichessRating: e.target.value})}
+                  className="w-full px-3 py-2 border rounded"
+                >
+                  <option value="bullet">Bullet ({formData.bulletRating || 'Not rated'})</option>
+                  <option value="blitz">Blitz ({formData.blitzRating || 'Not rated'})</option>
+                  <option value="rapid">Rapid ({formData.rapidRating || 'Not rated'})</option>
+                  <option value="classical">Classical ({formData.classicalRating || 'Not rated'})</option>
+                  <option value="correspondence">Correspondence ({formData.correspondenceRating || 'Not rated'})</option>
+                </select>
+              </div>
+            )}
+
+            {/* Lichess Ratings Display */}
+            {(formData.bulletRating || formData.blitzRating || formData.rapidRating || formData.classicalRating) && (
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium mb-2">Lichess Ratings</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {formData.bulletRating && <div>Bullet: {formData.bulletRating}</div>}
+                  {formData.blitzRating && <div>Blitz: {formData.blitzRating}</div>}
+                  {formData.rapidRating && <div>Rapid: {formData.rapidRating}</div>}
+                  {formData.classicalRating && <div>Classical: {formData.classicalRating}</div>}
+                  {formData.correspondenceRating && <div>Correspondence: {formData.correspondenceRating}</div>}
+                </div>
+              </div>
+            )}
 
             <div className="flex space-x-4">
               <button

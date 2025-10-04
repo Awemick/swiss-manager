@@ -20,10 +20,21 @@ export async function GET(
 
     const data = await response.json()
 
+    // Extract all available ratings
     const ratings = {
+      bullet: data.perfs?.bullet?.rating || null,
       blitz: data.perfs?.blitz?.rating || null,
       rapid: data.perfs?.rapid?.rating || null,
-      classical: data.perfs?.classical?.rating || null
+      classical: data.perfs?.classical?.rating || null,
+      correspondence: data.perfs?.correspondence?.rating || null,
+      puzzle: data.perfs?.puzzle?.rating || null,
+      // Include additional metadata
+      username: data.username,
+      title: data.title || null,
+      createdAt: data.createdAt,
+      seenAt: data.seenAt,
+      playTime: data.playTime,
+      count: data.count
     }
 
     return NextResponse.json(ratings)
